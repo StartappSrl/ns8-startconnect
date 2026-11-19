@@ -1,0 +1,34 @@
+#
+# Copyright (C) 2026 Startapp Srl
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Pod di StartConnect: guacd + backend (API e tunnel)
+
+[Unit]
+Description=StartConnect pod
+Requires=guacd.service startconnect-app.service
+Before=guacd.service startconnect-app.service
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+EnvironmentFile=-%E/state/environment
+WorkingDirectory=%E/state
+Restart=always
+TimeoutStopSec=70
+ExecStartPre=/usr/local/bin/runagent discover-ldap
+ExecStartPre=/bin/rm -f %t/startconnect.pid %t/startconnect.pod-id
+ExecStartPre=/usr/bin/podman pod create --infra-conmon-pidfile %t/startconnect.pid \
+    --pod-id-file %t/startconnect.pod-id \
+    --name startconnect \
+    --publish 127.0.0.1:${TCP_PORT}:8080 \
+    --network=slirp4netns:allow_host_loopback=true \
+    --replace
+ExecStart=/usr/bin/podman pod start --pod-id-file %t/startconnect.pod-id
+ExecStop=/usr/bin/podman pod stop --ignore --pod-id-file %t/startconnect.pod-id -t 10
+ExecStopPost=/usr/bin/podman pod rm --ignore -f --pod-id-file %t/startconnect.pod-id
+PIDFile=%t/startconnect.pid
+Type=forking
+
+[Install]
+WantedBy=default.target

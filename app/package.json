@@ -1,0 +1,30 @@
+{
+  "name": "startconnect-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "StartConnect backend: catalogo connessioni condiviso, permessi LDAP e tunnel Guacamole",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "better-sqlite3": "13.0.3",
+    "express": "5.3.0",
+    "guacamole-lite": "1.2.0",
+    "ldapts": "9.2.0",
+    "ws": "8.22.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "9.6.0",
+    "@types/express": "5.0.6",
+    "@types/node": "26.6.6",
+    "@types/ws": "8.18.2",
+    "typescript": "5.9.3"
+  }
+}

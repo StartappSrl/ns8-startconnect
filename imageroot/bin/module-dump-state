@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2026 Startapp Srl
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Copia coerente del database SQLite prima del backup
+set -e
+podman exec startconnect-app node dist/backup.js /data/backup.sqlite

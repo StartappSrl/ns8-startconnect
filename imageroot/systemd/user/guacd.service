@@ -1,0 +1,30 @@
+#
+# Copyright (C) 2026 Startapp Srl
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+[Unit]
+Description=StartConnect guacd
+BindsTo=startconnect.service
+After=startconnect.service
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+EnvironmentFile=%E/state/environment
+WorkingDirectory=%E/state
+Restart=always
+TimeoutStopSec=70
+ExecStartPre=/bin/rm -f %t/guacd.pid %t/guacd.ctr-id
+# guacd non è pubblicato fuori dal pod: solo il backend lo raggiunge
+ExecStart=/usr/bin/podman run --conmon-pidfile %t/guacd.pid \
+    --cidfile %t/guacd.ctr-id --cgroups=no-conmon \
+    --pod-id-file %t/startconnect.pod-id --replace -d --name guacd \
+    --env GUACD_LOG_LEVEL=info \
+    ${STARTCONNECT_GUACD_IMAGE}
+ExecStop=/usr/bin/podman stop --ignore --cidfile %t/guacd.ctr-id -t 10
+ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/guacd.ctr-id
+PIDFile=%t/guacd.pid
+Type=forking
+
+[Install]
+WantedBy=default.target

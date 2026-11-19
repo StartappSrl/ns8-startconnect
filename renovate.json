@@ -1,0 +1,28 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests", ":disableDependencyDashboard"],
+  "description": "ns8-startconnect: attesa di 14 giorni sulle nuove versioni, nessun merge automatico.",
+  "minimumReleaseAge": "14 days",
+  "internalChecksFilter": "strict",
+  "automerge": false,
+  "labels": ["dipendenze"],
+  "vulnerabilityAlerts": { "enabled": true, "minimumReleaseAge": "3 days", "labels": ["sicurezza"] },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Versione di guacamole-server (alla 1.6.1 rimuovere guacd/patches)",
+      "managerFilePatterns": ["/^build-images\\.sh$/"],
+      "matchStrings": ["guacd_version=(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      "depNameTemplate": "apache/guacamole-server",
+      "datasourceTemplate": "github-tags"
+    },
+    {
+      "customType": "regex",
+      "description": "Base Alpine di guacd",
+      "managerFilePatterns": ["/^build-images\\.sh$/"],
+      "matchStrings": ["ALPINE_BASE_IMAGE=(?<currentValue>\\d+\\.\\d+)"],
+      "depNameTemplate": "alpine",
+      "datasourceTemplate": "docker"
+    }
+  ]
+}

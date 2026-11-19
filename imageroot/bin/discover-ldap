@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2026 Startapp Srl
+# Derived from mrmarkuz/ns8-guacamole, Copyright (C) 2022 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Scrive ldap.env con i parametri del dominio utenti NS8 (via ldapproxy).
+
+import os
+import agent
+from agent.ldapproxy import Ldapproxy
+
+domain = os.environ.get("LDAP_DOMAIN", "")
+
+try:
+    odom = Ldapproxy().get_domain(domain)
+    "host" in odom  # solleva un'eccezione se odom è None
+except Exception:
+    # Durante un ripristino il dominio può non essere ancora disponibile:
+    # valori fittizi, l'evento user-domain-changed li correggerà.
+    odom = {
+        "host": "127.0.0.1", "port": 20000, "schema": "rfc2307",
+        "base_dn": "dc=startconnect,dc=invalid",
+        "bind_dn": "cn=none,dc=startconnect,dc=invalid", "bind_password": "invalid",
+    }
+
+tmp = "ldap.env." + str(os.getpid())
+old_umask = os.umask(0o077)
+try:
+    with open(tmp, "w") as fp:
+        # 10.0.2.2 è il loopback dell'host visto dal pod (slirp4netns)
+        print("LDAP_URL=ldap://10.0.2.2:" + str(odom["port"]), file=fp)
+        print("LDAP_SCHEMA=" + odom["schema"], file=fp)
+        print("LDAP_BASE_DN=" + odom["base_dn"], file=fp)
+        print("LDAP_BIND_DN=" + odom["bind_dn"], file=fp)
+        print("LDAP_BIND_PASSWORD=" + odom["bind_password"], file=fp)
+    os.replace(tmp, "ldap.env")
+finally:
+    os.umask(old_umask)

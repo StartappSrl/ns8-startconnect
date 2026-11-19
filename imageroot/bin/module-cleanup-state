@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2026 Startapp Srl
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+rm -vf data/backup.sqlite

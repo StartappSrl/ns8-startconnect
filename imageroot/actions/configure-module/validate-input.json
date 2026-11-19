@@ -1,0 +1,48 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Configure StartConnect",
+    "$id": "http://schema.nethserver.org/startconnect/configure-module-input.json",
+    "description": "Configure StartConnect",
+    "examples": [
+        {
+            "host": "connect.example.org",
+            "http2https": true,
+            "lets_encrypt": true,
+            "ldap_domain": "ad.example.org",
+            "admin_group": "domain admins"
+        }
+    ],
+    "type": "object",
+    "required": ["host", "ldap_domain"],
+    "properties": {
+        "host": {
+            "type": "string",
+            "description": "Fully qualified domain name of the StartConnect server",
+            "format": "idn-hostname"
+        },
+        "lets_encrypt": {
+            "type": "boolean",
+            "description": "Request a Let's Encrypt certificate"
+        },
+        "http2https": {
+            "type": "boolean",
+            "description": "Redirect HTTP requests to HTTPS"
+        },
+        "ldap_domain": {
+            "type": "string",
+            "minLength": 1,
+            "description": "NS8 user domain used to authenticate StartConnect users"
+        },
+        "admin_group": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Members of this group manage every folder, connection and permission"
+        },
+        "audit_retention_days": {
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 3650,
+            "description": "Days the activity log is kept"
+        }
+    }
+}

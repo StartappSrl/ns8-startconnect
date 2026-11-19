@@ -1,0 +1,60 @@
+From c3644b4e2f958d9e7c22516cde3abccad46e5337 Mon Sep 17 00:00:00 2001
+From: Virtually Nick <vnick@apache.org>
+Date: Fri, 22 Aug 2025 11:16:06 -0400
+Subject: [PATCH 1/2] GUACAMOLE-2072: Move RAIL and static plugin loads to the
+ LoadPlugins callback.
+
+(cherry picked from commit 97c0bc388f7720efeed5c5ed4d90d5400a4f60df)
+---
+ src/protocols/rdp/rdp.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/src/protocols/rdp/rdp.c b/src/protocols/rdp/rdp.c
+index aad1763b..669bc82e 100644
+--- a/src/protocols/rdp/rdp.c
++++ b/src/protocols/rdp/rdp.c
+@@ -100,6 +100,20 @@ static BOOL rdp_freerdp_load_channels(freerdp* instance) {
+     guac_rdp_client* rdp_client = (guac_rdp_client*) client->data;
+     guac_rdp_settings* settings = rdp_client->settings;
+ 
++    /* Load RAIL plugin if RemoteApp in use */
++    if (settings->remote_app != NULL)
++        guac_rdp_rail_load_plugin(context);
++
++    /* Load SVC plugin instances for all static channels */
++    if (settings->svc_names != NULL) {
++
++        char** current = settings->svc_names;
++        do {
++            guac_rdp_pipe_svc_load_plugin(context, *current);
++        } while (*(++current) != NULL);
++
++    }
++
+     /* Load "disp" plugin for display update */
+     if (settings->resize_method == GUAC_RESIZE_DISPLAY_UPDATE)
+         guac_rdp_disp_load_plugin(context);
+@@ -178,20 +192,6 @@ static BOOL rdp_freerdp_pre_connect(freerdp* instance) {
+     /* Init FreeRDP add-in provider */
+     freerdp_register_addin_provider(freerdp_channels_load_static_addin_entry, 0);
+ 
+-    /* Load RAIL plugin if RemoteApp in use */
+-    if (settings->remote_app != NULL)
+-        guac_rdp_rail_load_plugin(context);
+-
+-    /* Load SVC plugin instances for all static channels */
+-    if (settings->svc_names != NULL) {
+-
+-        char** current = settings->svc_names;
+-        do {
+-            guac_rdp_pipe_svc_load_plugin(context, *current);
+-        } while (*(++current) != NULL);
+-
+-    }
+-
+     /* Init FreeRDP internal GDI implementation */
+     if (!gdi_init(instance, guac_rdp_get_native_pixel_format(FALSE)))
+         return FALSE;
+-- 
+2.43.0
+
