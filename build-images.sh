@@ -30,7 +30,11 @@ git clone --quiet --depth 1 --branch "${guacd_version}" https://github.com/apach
 git -C "${guacd_ctx}" apply "${PWD}"/guacd/patches/*.patch
 # La ricetta resta su Alpine 3.18 solo per OpenSSL 1.1, richiesto da FreeRDP 2: con FreeRDP 3 si usa OpenSSL 3
 sed -i 's/openssl1.1-compat-dev/openssl-dev/' "${guacd_ctx}/Dockerfile"
-sed -i 's/-DBUILTIN_CHANNELS=OFF/-DCMAKE_BUILD_TYPE=Release -DBUILTIN_CHANNELS=OFF/' "${guacd_ctx}/Dockerfile"
+# Alpine 3.22 non ha più webkit2gtk-dev (WebKitGTK 4.0): c'è solo webkit2gtk-4.1-dev.
+# WebKit serve solo alla finestra di login Azure del client SDL di FreeRDP, che guacd non usa:
+# la WebView si disattiva, così la compilazione non dipende dalla versione di WebKitGTK.
+sed -i 's/webkit2gtk-dev/webkit2gtk-4.1-dev/' "${guacd_ctx}/Dockerfile"
+sed -i 's/-DBUILTIN_CHANNELS=OFF/-DCMAKE_BUILD_TYPE=Release -DWITH_WEBVIEW=OFF -DBUILTIN_CHANNELS=OFF/' "${guacd_ctx}/Dockerfile"
 buildah bud --layers \
     --build-arg ALPINE_BASE_IMAGE=3.22 \
     --build-arg FREERDP_VERSION=3 \
