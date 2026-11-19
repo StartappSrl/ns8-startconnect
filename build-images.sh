@@ -22,7 +22,9 @@ corepack_version=0.36.0
 #    - le correzioni ufficiali GUACAMOLE-2072 e GUACAMOLE-2328 dal ramo 1.6.1: senza la seconda
 #      guacd 1.6.0 va in crash su ogni connessione RDP con FreeRDP 3.31 e successivi;
 #    - FreeRDP compilato in modalità Release (GUACAMOLE-2264): le asserzioni di debug
-#      interromperebbero le sessioni.
+#      interromperebbero le sessioni;
+#    - libwebsockets fissata alla serie 4.x: la ricetta prende l'ultima versione e la 5.x
+#      richiede GnuTLS, assente nella ricetta (guacamole 1.6.0 è scritto per la 4.x).
 #
 guacd_version=1.6.0
 guacd_ctx=$(mktemp -d)
@@ -39,6 +41,7 @@ buildah bud --layers \
     --build-arg ALPINE_BASE_IMAGE=3.22 \
     --build-arg FREERDP_VERSION=3 \
     --build-arg 'WITH_FREERDP=3\.32\.\d+' \
+    --build-arg 'WITH_LIBWEBSOCKETS=v4\.\d+(\.\d+)+' \
     -t "${repobase}/${reponame}-guacd" "${guacd_ctx}"
 rm -rf "${guacd_ctx}"
 images+=("${repobase}/${reponame}-guacd")
