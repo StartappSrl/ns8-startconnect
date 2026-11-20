@@ -54,6 +54,7 @@
     "loader-utils@npm:^1.4.0": "1.4.2",
     "minimist@npm:^1.2.0": "1.2.8",
     "minimist@npm:^1.2.5": "1.2.8",
+    "node-forge@npm:^0.10.0": "1.4.3",
     "nanoid@npm:^3.3.11": "3.3.18",
     "nanoid@npm:^3.3.12": "3.3.18",
     "postcss@npm:^8.4.14": "8.5.18",
