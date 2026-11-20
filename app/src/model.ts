@@ -6,6 +6,7 @@ import { isProtocol, PROTOCOLS, RULES, sanitizeOptions, type Protocol } from "./
 import type { User } from "./auth.js";
 import { hub } from "./agents.js";
 import { fingerprint } from "./envelope.js";
+import { peersFor, rustdeskEnabled } from "./rustdesk.js";
 
 // Riferimento a un elemento StartCredentials: identificativi, nessun segreto.
 // "prompt" = le credenziali vengono chieste all'utente a ogni connessione.
@@ -220,7 +221,8 @@ export function catalogFor(user: User) {
       permission: levels.get(d.folder_id!)!,
     }));
 
-  return { folders, connections, devices };
+  const { peers, unassigned } = peersFor(levels, user.admin);
+  return { folders, connections, devices, rustdesk: { enabled: rustdeskEnabled(), peers, unassigned } };
 }
 
 export function validName(value: unknown): string | null {

@@ -31,3 +31,39 @@ if not os.path.exists("secrets.env"):
         os.replace("secrets.env.tmp", "secrets.env")
     finally:
         os.umask(old_umask)
+
+# Server RustDesk (facoltativo). Indirizzi e chiave pubblica sono dati pubblici
+# (vanno ai client); utente e password di rustdesk-api servono solo a leggere
+# l'elenco dei dispositivi e restano in rustdesk.env, mai in get-configuration.
+rustdesk = data.get("rustdesk")
+if rustdesk is not None:
+    agent.set_env("RUSTDESK_ID_SERVER", rustdesk.get("id_server", ""))
+    agent.set_env("RUSTDESK_RELAY_SERVER", rustdesk.get("relay_server", "") or rustdesk.get("id_server", ""))
+    agent.set_env("RUSTDESK_API_SERVER", rustdesk.get("api_server", ""))
+    agent.set_env("RUSTDESK_KEY", rustdesk.get("key", ""))
+
+    current = {}
+    if os.path.exists("rustdesk.env"):
+        with open("rustdesk.env") as fp:
+            for line in fp:
+                key, sep, value = line.rstrip("\n").partition("=")
+                if sep:
+                    current[key] = value
+    user = rustdesk.get("api_user", current.get("RUSTDESK_API_USER", ""))
+    # Password omessa = invariata; stringa vuota = cancellata
+    password = rustdesk["api_password"] if "api_password" in rustdesk else current.get("RUSTDESK_API_PASSWORD", "")
+    old_umask = os.umask(0o077)
+    try:
+        with open("rustdesk.env.tmp", "w") as fp:
+            print("RUSTDESK_API_USER=" + user, file=fp)
+            print("RUSTDESK_API_PASSWORD=" + password, file=fp)
+        os.replace("rustdesk.env.tmp", "rustdesk.env")
+    finally:
+        os.umask(old_umask)
+elif not os.path.exists("rustdesk.env"):
+    # Il servizio legge sempre il file: vuoto finché RustDesk non è configurato
+    old_umask = os.umask(0o077)
+    try:
+        open("rustdesk.env", "w").close()
+    finally:
+        os.umask(old_umask)

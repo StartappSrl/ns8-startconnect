@@ -112,6 +112,34 @@ const MIGRATIONS: string[] = [
     created_at TEXT NOT NULL
   );
   `,
+  // PC raggiungibili con RustDesk. I dati descrittivi arrivano dal server RustDesk
+  // (rustdesk-api) o dall'agente; cartella, nome e credenziale li decide StartConnect.
+  // Senza cartella il PC è "da assegnare" e lo vedono solo gli amministratori.
+  `
+  CREATE TABLE rustdesk_peers (
+    id TEXT PRIMARY KEY,
+    folder_id TEXT REFERENCES folders(id) ON DELETE SET NULL,
+    name TEXT NOT NULL DEFAULT '',
+    device_id TEXT REFERENCES devices(id) ON DELETE SET NULL,
+    credential TEXT,
+    hostname TEXT,
+    os TEXT,
+    username TEXT,
+    version TEXT,
+    last_online TEXT,
+    last_ip TEXT,
+    source TEXT NOT NULL CHECK (source IN ('server','agent','manual')),
+    ignored INTEGER NOT NULL DEFAULT 0,
+    synced_at TEXT,
+    updated_at TEXT NOT NULL
+  );
+  CREATE INDEX rustdesk_peers_folder ON rustdesk_peers(folder_id);
+  CREATE INDEX rustdesk_peers_device ON rustdesk_peers(device_id);
+  -- Riferimento (non la password) alla voce StartCredentials con la password RustDesk
+  -- creata dal tecnico insieme al pacchetto: passa dal codice al dispositivo al PC
+  ALTER TABLE enrollments ADD COLUMN rustdesk_credential TEXT;
+  ALTER TABLE devices ADD COLUMN rustdesk_credential TEXT;
+  `,
 ];
 
 function open(): Database.Database {

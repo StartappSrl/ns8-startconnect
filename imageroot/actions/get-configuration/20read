@@ -23,4 +23,21 @@ config = {
     "domains_list": domains,
 }
 
+# RustDesk: la password di rustdesk-api non esce mai, si indica solo se è impostata
+rustdesk_secrets = {}
+if os.path.exists("rustdesk.env"):
+    with open("rustdesk.env") as fp:
+        for line in fp:
+            key, sep, value = line.rstrip("\n").partition("=")
+            if sep:
+                rustdesk_secrets[key] = value
+config["rustdesk"] = {
+    "id_server": os.getenv("RUSTDESK_ID_SERVER", ""),
+    "relay_server": os.getenv("RUSTDESK_RELAY_SERVER", ""),
+    "api_server": os.getenv("RUSTDESK_API_SERVER", ""),
+    "key": os.getenv("RUSTDESK_KEY", ""),
+    "api_user": rustdesk_secrets.get("RUSTDESK_API_USER", ""),
+    "api_password_set": bool(rustdesk_secrets.get("RUSTDESK_API_PASSWORD")),
+}
+
 json.dump(config, fp=sys.stdout)
