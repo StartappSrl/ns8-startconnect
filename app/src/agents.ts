@@ -20,6 +20,7 @@ import { open, type Envelope } from "./envelope.js";
 import { serverSeal } from "./identity.js";
 import { trustChain } from "./trust.js";
 import { binaryFor, manifests } from "./updates.js";
+import { linkFromAgent } from "./rustdesk.js";
 
 interface DeviceRow {
   id: string;
@@ -131,6 +132,8 @@ class AgentConnection {
         const data = JSON.stringify(msg.data ?? {});
         if (data.length <= MAX_INVENTORY) {
           db.prepare("UPDATE devices SET inventory = ?, last_seen = ? WHERE id = ?").run(data, now(), this.deviceId);
+          // ID RustDesk del dispositivo, se l'agente lo ha installato o trovato
+          linkFromAgent(this.deviceId, (msg.data as Record<string, unknown> | undefined)?.rustdesk);
         }
         break;
       }

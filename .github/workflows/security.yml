@@ -25,6 +25,8 @@ jobs:
       - run: npm ci
       - run: npm audit --omit=dev --audit-level=moderate
       - run: npm run typecheck
+      - name: Prova dei PC RustDesk (backend reale, rustdesk-api simulato)
+        run: npm run build && node test/e2e-rustdesk.mjs
 
   repository:
     runs-on: ubuntu-latest

@@ -24,6 +24,11 @@ ExecStart=/usr/bin/podman run --conmon-pidfile %t/startconnect-app.pid \
     --pod-id-file %t/startconnect.pod-id --replace -d --name startconnect-app \
     --env-file=%E/state/ldap.env \
     --env-file=%E/state/secrets.env \
+    --env-file=%E/state/rustdesk.env \
+    --env RUSTDESK_ID_SERVER=${RUSTDESK_ID_SERVER} \
+    --env RUSTDESK_RELAY_SERVER=${RUSTDESK_RELAY_SERVER} \
+    --env RUSTDESK_API_SERVER=${RUSTDESK_API_SERVER} \
+    --env RUSTDESK_KEY=${RUSTDESK_KEY} \
     --env ADMIN_GROUP=${ADMIN_GROUP} \
     --env AUDIT_RETENTION_DAYS=${AUDIT_RETENTION_DAYS} \
     --env PUBLIC_HOST=${TRAEFIK_HOST} \

@@ -8,7 +8,8 @@ import { loginAllowed, requireAdmin, requireUser, type User } from "./auth.js";
 import { audit, db, now } from "./db.js";
 import { fingerprint, open, payloadHash, publicKeyFromRaw, verifyTrustChain, type Envelope } from "./envelope.js";
 import { serverIdentity, serverSeal } from "./identity.js";
-import { folderLevel, loadCatalog, validName } from "./model.js";
+import { folderLevel, loadCatalog, sanitizeCredential, validName } from "./model.js";
+import { linkFromAgent } from "./rustdesk.js";
 import { currentTrust, MAX_CERT_DAYS, trustChain, type CertDoc, type TrustDocFull } from "./trust.js";
 
 export const agentRouter = Router();
@@ -53,14 +54,14 @@ agentRouter.post("/agent/enroll", (req, res) => {
   if (!secret || !publicKeyFromRaw(publicKey)) return fail(res, 400, "bad_request", "Richiesta non valida.");
 
   const result = db.transaction(() => {
-    const e = db.prepare("SELECT id, folder_id, created_by, expires_at, uses_left FROM enrollments WHERE secret_hash = ?")
-      .get(sha(secret)) as { id: string; folder_id: string; created_by: string; expires_at: number; uses_left: number } | undefined;
+    const e = db.prepare("SELECT id, folder_id, created_by, expires_at, uses_left, rustdesk_credential FROM enrollments WHERE secret_hash = ?")
+      .get(sha(secret)) as { id: string; folder_id: string; created_by: string; expires_at: number; uses_left: number; rustdesk_credential: string | null } | undefined;
     if (!e || e.uses_left < 1 || e.expires_at < Date.now()) return null;
     if (db.prepare("SELECT 1 FROM devices WHERE public_key = ?").get(publicKey)) return null;
     db.prepare("UPDATE enrollments SET uses_left = uses_left - 1 WHERE id = ?").run(e.id);
     const id = randomUUID();
-    db.prepare(`INSERT INTO devices (id, folder_id, name, public_key, status, enrolled_at) VALUES (?, ?, ?, ?, 'pending', ?)`)
-      .run(id, e.folder_id, hostname, publicKey, now());
+    db.prepare(`INSERT INTO devices (id, folder_id, name, public_key, status, enrolled_at, rustdesk_credential) VALUES (?, ?, ?, ?, 'pending', ?, ?)`)
+      .run(id, e.folder_id, hostname, publicKey, now(), e.rustdesk_credential);
     return { id, enrollment: e };
   })();
 
@@ -170,9 +171,13 @@ agentRouter.post("/enrollments", requireUser, (req, res) => {
   const uses = Math.min(Math.max(Number(body.uses) || 1, 1), 50);
   const secret = randomBytes(32).toString("base64url");
   const id = randomUUID();
-  db.prepare("INSERT INTO enrollments (id, folder_id, secret_hash, created_by, created_at, expires_at, uses_left) VALUES (?, ?, ?, ?, ?, ?, ?)")
-    .run(id, folderId, sha(secret), u.username, now(), Date.now() + hours * 3600_000, uses);
-  audit(u.username, "enrollment.create", null, { id, folderId, hours, uses });
+  // Voce StartCredentials con la password RustDesk del pacchetto (solo identificativi)
+  const rustdeskCredential = sanitizeCredential(body.rustdeskCredential);
+  db.prepare(`INSERT INTO enrollments (id, folder_id, secret_hash, created_by, created_at, expires_at, uses_left, rustdesk_credential)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(id, folderId, sha(secret), u.username, now(), Date.now() + hours * 3600_000, uses,
+      rustdeskCredential?.type === "item" ? JSON.stringify(rustdeskCredential) : null);
+  audit(u.username, "enrollment.create", null, { id, folderId, hours, uses, rustdesk: Boolean(rustdeskCredential) });
   // Il segreto viene mostrato una sola volta; nel database resta solo l'hash
   res.status(201).json({ id, secret, serverKey: serverIdentity().publicKey, expiresAt: Date.now() + hours * 3600_000 });
 });
@@ -201,6 +206,15 @@ agentRouter.post("/devices/:id/approve", requireUser, (req, res) => {
   }
   db.prepare("UPDATE devices SET status = 'active', approved_by = ?, approved_at = ? WHERE id = ?").run(u.username, now(), d.id);
   audit(u.username, "device.approve", null, { device: d.id, name: d.name });
+  // Il PC RustDesk installato dall'agente si collega solo a dispositivo approvato
+  const inventory = db.prepare("SELECT json_extract(inventory, '$.rustdesk') AS r FROM devices WHERE id = ?").get(d.id) as { r: string | null };
+  if (inventory?.r) {
+    try {
+      linkFromAgent(d.id, JSON.parse(inventory.r));
+    } catch {
+      // inventario non valido: il collegamento avverrà al prossimo invio
+    }
+  }
   res.json({ ok: true });
 });
 

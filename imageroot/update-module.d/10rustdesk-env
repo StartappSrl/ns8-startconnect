@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2026 Startapp Srl
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Dalla versione con RustDesk il backend legge sempre rustdesk.env: sulle installazioni
+# precedenti si crea vuoto (RustDesk non configurato) prima del riavvio.
+set -e
+if [ ! -e rustdesk.env ]; then
+    (umask 077 && : > rustdesk.env)
+fi

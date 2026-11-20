@@ -7,6 +7,8 @@ import { config } from "./config.js";
 import { pruneAudit } from "./db.js";
 import { router, VERSION } from "./routes.js";
 import { agentRouter } from "./routes-agent.js";
+import { rustdeskRouter } from "./routes-rustdesk.js";
+import { startRustdeskSync } from "./rustdesk-sync.js";
 import { authRouter } from "./mfa.js";
 import { updatesRouter } from "./updates.js";
 import { hub } from "./agents.js";
@@ -28,6 +30,7 @@ app.use("/api", updatesRouter);
 app.use(express.json({ limit: "64kb" }));
 app.use("/api", authRouter);
 app.use("/api", agentRouter);
+app.use("/api", rustdeskRouter);
 app.use("/api", router);
 app.use((_req, res) => {
   res.status(404).json({ code: "not_found", message: "Risorsa inesistente." });
@@ -46,6 +49,7 @@ const prune = () => {
 };
 prune();
 setInterval(prune, 6 * 3_600_000).unref();
+startRustdeskSync();
 const tunnel = attachTunnel();
 
 // Due WebSocket sullo stesso server HTTP: /tunnel (guacd) e /agent (agenti)
