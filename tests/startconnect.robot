@@ -16,6 +16,16 @@ Login to cluster-admin
     Click    button >> text="Log in"
     Wait For Elements State    css=#main-content    visible    timeout=10s
 
+Backend answers
+    ${output}    ${rc} =    Execute Command    curl -sS -f -H 'Host: startconnect.test' http://127.0.0.1/api/info
+    ...    return_rc=True
+    Log    ${output}
+    Should Be Equal As Integers    ${rc}  0
+
+Log module state
+    ${output} =    Execute Command    curl -sS -i -H 'Host: startconnect.test' http://127.0.0.1/api/info; runagent -m ${module_id} systemctl --user --no-pager status startconnect.service startconnect-app.service guacd.service; runagent -m ${module_id} journalctl --user --no-pager -n 60
+    Log    ${output}    console=True
+
 *** Test Cases ***
 Check if startconnect is installed correctly
     ${output}  ${rc} =    Execute Command    add-module ${IMAGE_URL} 1
@@ -46,9 +56,9 @@ Check if startconnect can be configured
     Should Be Equal As Integers    ${rc}  0
 
 Check if startconnect works as expected
-    ${rc} =    Execute Command    curl -f -H 'Host: startconnect.test' http://127.0.0.1/api/info
-    ...    return_rc=True  return_stdout=False
-    Should Be Equal As Integers    ${rc}  0
+    # Dopo configure-module il backend e la rotta Traefik impiegano qualche secondo ad attivarsi
+    Wait Until Keyword Succeeds    24 times    5 seconds    Backend answers
+    [Teardown]    Run Keyword If Test Failed    Log module state
 
 Check if startconnect is removed correctly
     ${rc} =    Execute Command    remove-module --no-preserve ${module_id}

@@ -6,6 +6,12 @@ on:
       - '**/validate-input.json'
       - '**/validate-output.json'
       - '**/validator-definitions.json'
+      - '.github/workflows/build-apidoc.yml'
+
+# Il workflow riutilizzabile pubblica i documenti in un ramo apidoc-*: serve la scrittura
+# (nei repository nuovi il token è in sola lettura e GitHub rifiuterebbe di avviarlo)
+permissions:
+  contents: write
 
 jobs:
   build-apidoc:

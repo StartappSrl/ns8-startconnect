@@ -3,6 +3,11 @@ name: "Clean up API JSON Schema docs"
 on:
   delete:
 
+# Il workflow riutilizzabile pubblica i documenti in un ramo apidoc-*: serve la scrittura
+# (nei repository nuovi il token è in sola lettura e GitHub rifiuterebbe di avviarlo)
+permissions:
+  contents: write
+
 jobs:
   build-apidoc:
     name: "Delete apidoc branch ${{ github.event.ref }}"
