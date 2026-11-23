@@ -51,6 +51,37 @@ Parametri di `configure-module` (disponibili anche nella pagina Impostazioni del
 Alla prima configurazione vengono generati in `state/secrets.env` la chiave dei token del tunnel
 e quella delle sessioni API. Il file è incluso nel backup.
 
+## RustDesk (facoltativo)
+
+StartConnect può elencare i PC del server RustDesk dell'azienda (modulo `ns8-rustdesk`, con
+rustdesk-api) e metterli nelle cartelle dei clienti, con gli stessi permessi delle connessioni.
+La sessione la apre il client RustDesk del tecnico; StartConnect registra chi apre cosa.
+
+    api-cli run module/startconnect1/configure-module --data '{
+      ...impostazioni attuali...,
+      "rustdesk": {
+        "id_server": "rds.example.org",
+        "api_server": "https://rds.example.org",
+        "key": "<contenuto di id_ed25519.pub di hbbs>",
+        "api_user": "startconnect-sync",
+        "api_password": "<password>"
+      }
+    }'
+
+- `id_server`, `relay_server` (vuoto = come `id_server`), `api_server` e `key` sono dati pubblici: li
+  ricevono i client e gli agenti. La chiave si legge con
+  `api-cli run module/rustdesk1/get-configuration | jq -r .public_key`.
+- `api_user`/`api_password`: utente **amministratore** di rustdesk-api (solo un amministratore vede
+  l'elenco completo dei dispositivi). Restano in `rustdesk.env` (0600, incluso nel backup) e non
+  compaiono mai in `get-configuration`; omettendo `api_password` si mantiene quella attuale.
+- L'IP del nodo StartConnect deve essere in `admin_allowlist` del modulo RustDesk: `/api/admin` è
+  protetta dalla stessa lista della console.
+- La sincronizzazione (`GET /api/admin/peer/list`) avviene ogni 60 secondi. Dopo un login fallito si
+  ferma per 30 minuti: rustdesk-api blocca per 30 minuti l'IP che sbaglia 5 accessi in 10 minuti.
+- Un PC è "collegato" se il suo client RustDesk ha contattato il server API negli ultimi 2 minuti.
+- I PC installati dall'agente StartConnect (opzione nel pacchetto) si collegano da soli al
+  dispositivo e alla sua cartella, con la voce StartCredentials della password creata dal tecnico.
+
 ## guacd
 
 L'immagine `startconnect-guacd` è ricompilata da `build-images.sh` dalla ricetta ufficiale di

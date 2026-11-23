@@ -9,7 +9,14 @@
             "http2https": true,
             "lets_encrypt": true,
             "ldap_domain": "ad.example.org",
-            "admin_group": "domain admins"
+            "admin_group": "domain admins",
+            "rustdesk": {
+                "id_server": "rustdesk.example.org",
+                "api_server": "https://rustdesk.example.org",
+                "key": "BASE64KEY=",
+                "api_user": "startconnect-sync",
+                "api_password": "secret"
+            }
         }
     ],
     "type": "object",
@@ -43,6 +50,44 @@
             "minimum": 30,
             "maximum": 3650,
             "description": "Days the activity log is kept"
+        },
+        "rustdesk": {
+            "type": "object",
+            "description": "RustDesk server whose devices are listed in StartConnect (optional)",
+            "additionalProperties": false,
+            "properties": {
+                "id_server": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "description": "ID server (host or host:port) used by RustDesk clients"
+                },
+                "relay_server": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "description": "Relay server; empty = same as id_server"
+                },
+                "api_server": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "pattern": "^(https://.+)?$",
+                    "description": "rustdesk-api URL (HTTPS)"
+                },
+                "key": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "description": "Public key of the RustDesk server (id_ed25519.pub)"
+                },
+                "api_user": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "description": "rustdesk-api administrator used to read the device list"
+                },
+                "api_password": {
+                    "type": "string",
+                    "maxLength": 512,
+                    "description": "Password of api_user; omit to keep the current one"
+                }
+            }
         }
     }
 }

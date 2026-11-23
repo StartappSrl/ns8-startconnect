@@ -26,3 +26,11 @@ run ssh e2e-guacd-ssh.mjs
 run identity e2e-identity.mjs
 run update e2e-update.mjs
 run recovery e2e-recovery.mjs
+
+# Autonoma: avvia da sé backend e rustdesk-api simulato
+printf "%-22s " e2e-rustdesk.mjs
+if node test/e2e-rustdesk.mjs > /tmp/startconnect-test-rustdesk.txt 2>&1; then
+  echo "OK $(grep -c '^OK' /tmp/startconnect-test-rustdesk.txt)"
+else
+  echo FAIL; grep '^FAIL' /tmp/startconnect-test-rustdesk.txt
+fi

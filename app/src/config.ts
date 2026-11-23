@@ -41,6 +41,20 @@ export const config = {
   auditRetentionDays: Math.min(Math.max(Number(process.env.AUDIT_RETENTION_DAYS) || 365, 30), 3650),
   pendingTtlMs: 60_000,
   adminGroup: (process.env.ADMIN_GROUP ?? "domain admins").toLowerCase(),
+  // Server RustDesk (facoltativo). I dati per i client sono pubblici; utente e password
+  // servono solo a leggere l'elenco dei dispositivi da rustdesk-api (secrets.env).
+  rustdesk: {
+    idServer: process.env.RUSTDESK_ID_SERVER ?? "",
+    relayServer: process.env.RUSTDESK_RELAY_SERVER ?? process.env.RUSTDESK_ID_SERVER ?? "",
+    apiServer: process.env.RUSTDESK_API_SERVER ?? "",
+    key: process.env.RUSTDESK_KEY ?? "",
+    apiUser: process.env.RUSTDESK_API_USER ?? "",
+    apiPassword: process.env.RUSTDESK_API_PASSWORD ?? "",
+    syncSeconds: Math.min(Math.max(Number(process.env.RUSTDESK_SYNC_SECONDS) || 60, 30), 3600),
+    // Un client RustDesk collegato al server API invia un segnale ogni 15 s (registrato al
+    // massimo ogni 30 s): oltre questa finestra senza contatti il PC è "non collegato".
+    onlineWindowMs: 2 * 60_000,
+  },
   ldap: {
     url: required("LDAP_URL"),
     schema: schema as "ad" | "rfc2307",
