@@ -18,9 +18,13 @@ Restart=always
 TimeoutStopSec=70
 ExecStartPre=/usr/local/bin/runagent discover-ldap
 ExecStartPre=/bin/rm -f %t/startconnect.pid %t/startconnect.pod-id
+# keep-id: l'utente "node" del backend (uid 1000 nel container) corrisponde all'utente
+# del modulo sull'host. Così i file in state/data restano del modulo e update-module
+# può gestirli (con un subuid il chown dell'estrazione dell'immagine falliva).
 ExecStartPre=/usr/bin/podman pod create --infra-conmon-pidfile %t/startconnect.pid \
     --pod-id-file %t/startconnect.pod-id \
     --name startconnect \
+    --userns=keep-id:uid=1000,gid=1000 \
     --publish 127.0.0.1:${TCP_PORT}:8080 \
     --network=slirp4netns:allow_host_loopback=true \
     --replace
