@@ -27,6 +27,8 @@ jobs:
       - run: npm run typecheck
       - name: Prova dei PC RustDesk (backend reale, rustdesk-api simulato)
         run: npm run build && node test/e2e-rustdesk.mjs
+      - name: Prova degli aggiornamenti del client
+        run: node test/e2e-client-updates.mjs
 
   repository:
     runs-on: ubuntu-latest

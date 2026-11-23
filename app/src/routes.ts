@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { randomUUID } from "node:crypto";
+import { createRequire } from "node:module";
 import { Router, type Request, type Response } from "express";
 import { requireAdmin, requireUser, type User } from "./auth.js";
 import { audit, db, now } from "./db.js";
@@ -17,7 +18,13 @@ import { isEnvelope, type Envelope } from "./envelope.js";
 import { authorizeCommand } from "./trust.js";
 import { probeRdp, probeSsh } from "./probe.js";
 
-export const VERSION = "0.1.0";
+// Versione = tag dell'immagine con cui il modulo avvia il backend (es. ...:0.1.2);
+// per le immagini di sviluppo (:main) quella di package.json con il tag come suffisso.
+const imageTag = (process.env.STARTCONNECT_APP_IMAGE ?? "").split(":").pop() ?? "";
+const packageVersion = (createRequire(import.meta.url)("../package.json") as { version: string }).version;
+export const VERSION = /^\d+\.\d+\.\d+$/.test(imageTag)
+  ? imageTag
+  : `${packageVersion}${imageTag ? `+${imageTag.replace(/[^\w.-]/g, "")}` : ""}`;
 export const router = Router();
 
 function fail(res: Response, status: number, code: string, message: string): void {

@@ -34,6 +34,7 @@ ExecStart=/usr/bin/podman run --conmon-pidfile %t/startconnect-app.pid \
     --env ADMIN_GROUP=${ADMIN_GROUP} \
     --env AUDIT_RETENTION_DAYS=${AUDIT_RETENTION_DAYS} \
     --env PUBLIC_HOST=${TRAEFIK_HOST} \
+    --env STARTCONNECT_APP_IMAGE=${STARTCONNECT_APP_IMAGE} \
     --env GUACD_HOST=127.0.0.1 \
     --env GUACD_PORT=4822 \
     --env DATA_DIR=/data \
