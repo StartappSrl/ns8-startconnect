@@ -15,9 +15,11 @@ WorkingDirectory=%E/state
 Restart=always
 TimeoutStopSec=70
 ExecStartPre=/bin/mkdir -p data
-# Nel container il backend gira come utente "node" (uid 1000): la cartella dei dati
-# deve appartenergli nello spazio utenti del container, altrimenti SQLite non può scrivere
-ExecStartPre=/usr/bin/podman unshare chown -R 1000:1000 data
+# Nel container il backend gira come utente "node" (uid 1000), che con il pod in
+# keep-id corrisponde all'utente del modulo. "podman unshare chown 0:0" assegna i dati
+# all'utente del modulo e riporta a lui anche i file creati dalle versioni precedenti
+# (allora appartenevano a un subuid).
+ExecStartPre=/usr/bin/podman unshare chown -R 0:0 data
 ExecStartPre=/bin/rm -f %t/startconnect-app.pid %t/startconnect-app.ctr-id
 ExecStart=/usr/bin/podman run --conmon-pidfile %t/startconnect-app.pid \
     --cidfile %t/startconnect-app.ctr-id --cgroups=no-conmon \
