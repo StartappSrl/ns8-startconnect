@@ -82,7 +82,20 @@ La sessione la apre il client RustDesk del tecnico; StartConnect registra chi ap
 - I PC installati dall'agente StartConnect (opzione nel pacchetto) si collegano da soli al
   dispositivo e alla sua cartella, con la voce StartCredentials della password creata dal tecnico.
 
-## guacd
+## Aggiornamenti del client desktop
+
+Un amministratore fidato pubblica la nuova versione del client dal proprio client (finestra
+"Sicurezza agenti"): installatore e manifesto firmato con la chiave del suo PC finiscono in
+`state/data/client-updates/` (solo l'ultima versione per piattaforma, `win-x64` e `linux-x64`).
+
+- `GET /api/client-updates`: versione e manifesto firmato; `GET .../:platform/download`: installatore.
+- Il server accetta solo manifesti firmati da un amministratore dell'elenco fidato, con impronta e
+  dimensione corrispondenti, e non permette di tornare a una versione precedente.
+- Ogni client verifica da sé firma, elenco fidato e impronta prima di installare: un server
+  compromesso non può distribuire un client falso. Se il client installato è firmato
+  (Authenticode), accetta solo installatori firmati dallo stesso editore.
+- Gli installatori non sono nel backup del modulo: dopo un ripristino si ripubblicano.
+
 
 L'immagine `startconnect-guacd` è ricompilata da `build-images.sh` dalla ricetta ufficiale di
 guacamole-server 1.6.0 con Alpine 3.22, OpenSSL 3 e FreeRDP 3.32.x, applicando le correzioni in

@@ -11,6 +11,7 @@ import { rustdeskRouter } from "./routes-rustdesk.js";
 import { startRustdeskSync } from "./rustdesk-sync.js";
 import { authRouter } from "./mfa.js";
 import { updatesRouter } from "./updates.js";
+import { clientUpdatesRouter } from "./client-updates.js";
 import { hub } from "./agents.js";
 import { attachTunnel } from "./tunnel.js";
 
@@ -27,6 +28,7 @@ app.use((_req, res, next) => {
   next();
 });
 app.use("/api", updatesRouter);
+app.use("/api", clientUpdatesRouter);
 app.use(express.json({ limit: "64kb" }));
 app.use("/api", authRouter);
 app.use("/api", agentRouter);

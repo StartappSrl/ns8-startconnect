@@ -34,3 +34,10 @@ if node test/e2e-rustdesk.mjs > /tmp/startconnect-test-rustdesk.txt 2>&1; then
 else
   echo FAIL; grep '^FAIL' /tmp/startconnect-test-rustdesk.txt
 fi
+
+printf "%-22s " e2e-client-updates.mjs
+if node test/e2e-client-updates.mjs > /tmp/startconnect-test-client-updates.txt 2>&1; then
+  echo "OK $(grep -c '^OK' /tmp/startconnect-test-client-updates.txt)"
+else
+  echo FAIL; grep '^FAIL' /tmp/startconnect-test-client-updates.txt
+fi
