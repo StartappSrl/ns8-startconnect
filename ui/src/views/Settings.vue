@@ -138,6 +138,74 @@
               ref="audit_retention_days"
             >
             </cv-text-input>
+            <!-- RustDesk (facoltativo) -->
+            <h4 class="mg-bottom-sm">{{ $t("settings.rustdesk_title") }}</h4>
+            <p class="mg-bottom helper">{{ $t("settings.rustdesk_description") }}</p>
+            <cv-text-input
+              :label="$t('settings.rustdesk_id_server')"
+              :helper-text="$t('settings.rustdesk_id_server_helper')"
+              placeholder="rustdesk.example.org"
+              v-model.trim="rustdesk.id_server"
+              class="mg-bottom"
+              :invalid-message="$t(error.rustdesk_id_server)"
+              :disabled="loading.getConfiguration || loading.configureModule"
+              ref="rustdesk_id_server"
+            >
+            </cv-text-input>
+            <cv-text-input
+              :label="$t('settings.rustdesk_relay_server')"
+              :helper-text="$t('settings.rustdesk_relay_server_helper')"
+              v-model.trim="rustdesk.relay_server"
+              class="mg-bottom"
+              :disabled="loading.getConfiguration || loading.configureModule"
+              ref="rustdesk_relay_server"
+            >
+            </cv-text-input>
+            <cv-text-input
+              :label="$t('settings.rustdesk_api_server')"
+              placeholder="https://rustdesk.example.org"
+              v-model.trim="rustdesk.api_server"
+              class="mg-bottom"
+              :invalid-message="$t(error.rustdesk_api_server)"
+              :disabled="loading.getConfiguration || loading.configureModule"
+              ref="rustdesk_api_server"
+            >
+            </cv-text-input>
+            <cv-text-input
+              :label="$t('settings.rustdesk_key')"
+              :helper-text="$t('settings.rustdesk_key_helper')"
+              v-model.trim="rustdesk.key"
+              class="mg-bottom"
+              :invalid-message="$t(error.rustdesk_key)"
+              :disabled="loading.getConfiguration || loading.configureModule"
+              ref="rustdesk_key"
+            >
+            </cv-text-input>
+            <cv-text-input
+              :label="$t('settings.rustdesk_api_user')"
+              :helper-text="$t('settings.rustdesk_api_user_helper')"
+              v-model.trim="rustdesk.api_user"
+              class="mg-bottom"
+              autocomplete="off"
+              :invalid-message="$t(error.rustdesk_api_user)"
+              :disabled="loading.getConfiguration || loading.configureModule"
+              ref="rustdesk_api_user"
+            >
+            </cv-text-input>
+            <cv-text-input
+              :label="$t('settings.rustdesk_api_password')"
+              :helper-text="rustdesk.password_set ? $t('settings.rustdesk_api_password_set') : $t('settings.rustdesk_api_password_helper')"
+              v-model="rustdesk.api_password"
+              type="password"
+              :password-hide-label="$t('settings.hide')"
+              :password-show-label="$t('settings.show')"
+              class="mg-bottom"
+              autocomplete="new-password"
+              :invalid-message="$t(error.rustdesk_api_password)"
+              :disabled="loading.getConfiguration || loading.configureModule"
+              ref="rustdesk_api_password"
+            >
+            </cv-text-input>
             <cv-row v-if="error.configureModule">
               <cv-column>
                 <NsInlineNotification
@@ -233,6 +301,16 @@ export default {
       admin_group: "domain admins",
       audit_retention_days: 365,
       domains_list: [],
+      // La password di rustdesk-api non arriva mai dal server: vuota = invariata
+      rustdesk: {
+        id_server: "",
+        relay_server: "",
+        api_server: "",
+        key: "",
+        api_user: "",
+        api_password: "",
+        password_set: false,
+      },
       loading: {
         getConfiguration: false,
         configureModule: false,
@@ -247,6 +325,11 @@ export default {
         ldap_domain: "",
         admin_group: "",
         audit_retention_days: "",
+        rustdesk_id_server: "",
+        rustdesk_api_server: "",
+        rustdesk_key: "",
+        rustdesk_api_user: "",
+        rustdesk_api_password: "",
         getStatus: false,
       },
     };
@@ -372,6 +455,16 @@ export default {
       this.domains_list = config.domains_list;
       this.admin_group = config.admin_group;
       this.audit_retention_days = config.audit_retention_days;
+      const rd = config.rustdesk || {};
+      this.rustdesk = {
+        id_server: rd.id_server || "",
+        relay_server: rd.relay_server && rd.relay_server !== rd.id_server ? rd.relay_server : "",
+        api_server: rd.api_server || "",
+        key: rd.key || "",
+        api_user: rd.api_user || "",
+        api_password: "",
+        password_set: Boolean(rd.api_password_set),
+      };
       // this.ldap_domain = config.ldap_domain;
       // force to reload value after dom update
       this.$nextTick(() => {
@@ -408,6 +501,33 @@ export default {
           this.focusElement("admin_group");
         }
         isValidationOk = false;
+      }
+
+      // RustDesk: facoltativo, ma se si indica il server servono chiave e accesso coerenti
+      const rd = this.rustdesk;
+      const fail = (field, message) => {
+        this.error[field] = message;
+        if (isValidationOk) {
+          this.focusElement(field);
+        }
+        isValidationOk = false;
+      };
+      if (rd.id_server || rd.api_server || rd.key || rd.api_user) {
+        if (!rd.id_server) {
+          fail("rustdesk_id_server", "common.required");
+        }
+        if (!rd.key) {
+          fail("rustdesk_key", "common.required");
+        }
+      }
+      if (rd.api_server && !rd.api_server.startsWith("https://")) {
+        fail("rustdesk_api_server", "settings.rustdesk_https_required");
+      }
+      if (rd.api_user && !rd.api_server) {
+        fail("rustdesk_api_server", "settings.rustdesk_api_server_required");
+      }
+      if (rd.api_user && !rd.password_set && !rd.api_password) {
+        fail("rustdesk_api_password", "common.required");
       }
 
       return isValidationOk;
@@ -469,6 +589,7 @@ export default {
             ldap_domain: this.ldap_domain,
             admin_group: this.admin_group,
             audit_retention_days: Number(this.audit_retention_days),
+            rustdesk: this.rustdeskPayload(),
           },
           extra: {
             title: this.$t("settings.instance_configuration", {
@@ -487,6 +608,23 @@ export default {
         this.loading.configureModule = false;
         return;
       }
+    },
+    rustdeskPayload() {
+      const rd = this.rustdesk;
+      const payload = {
+        id_server: rd.id_server,
+        relay_server: rd.relay_server,
+        api_server: rd.api_server,
+        key: rd.key,
+        api_user: rd.api_user,
+      };
+      // Password omessa = invariata; senza utente si cancella
+      if (rd.api_password) {
+        payload.api_password = rd.api_password;
+      } else if (!rd.api_user) {
+        payload.api_password = "";
+      }
+      return payload;
     },
     configureModuleAborted(taskResult, taskContext) {
       console.error(`${taskContext.action} aborted`, taskResult);
@@ -507,6 +645,15 @@ export default {
 @import "../styles/carbon-utils";
 .mg-bottom {
   margin-bottom: $spacing-06;
+}
+
+.mg-bottom-sm {
+  margin-bottom: $spacing-03;
+}
+
+.helper {
+  color: $text-02;
+  max-width: 38rem;
 }
 
 .maxwidth {

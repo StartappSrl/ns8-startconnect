@@ -37,7 +37,25 @@
     "instance_configuration": "Configure StartConnect",
     "domain_already_used_in_traefik": "Domain already used by another application",
     "audit_retention_days": "Activity log retention (days)",
-    "audit_retention_days_helper": "Between 30 and 3650 days; older entries are deleted automatically"
+    "audit_retention_days_helper": "Between 30 and 3650 days; older entries are deleted automatically",
+    "rustdesk_title": "RustDesk (optional)",
+    "rustdesk_description": "Lists the PCs of the company RustDesk server in StartConnect and lets the agent install RustDesk. Leave empty if you do not use RustDesk.",
+    "rustdesk_id_server": "RustDesk ID server",
+    "rustdesk_id_server_helper": "Host name used by RustDesk clients, e.g. rustdesk.example.org",
+    "rustdesk_relay_server": "Relay server",
+    "rustdesk_relay_server_helper": "Leave empty if it is the same as the ID server",
+    "rustdesk_api_server": "rustdesk-api URL",
+    "rustdesk_key": "Server public key",
+    "rustdesk_key_helper": "Content of id_ed25519.pub of hbbs",
+    "rustdesk_api_user": "rustdesk-api user",
+    "rustdesk_api_user_helper": "Dedicated administrator used to read the device list. The StartConnect node IP must be in the RustDesk module admin allowlist",
+    "rustdesk_api_password": "rustdesk-api password",
+    "rustdesk_api_password_helper": "Never shown again after saving",
+    "rustdesk_api_password_set": "A password is saved: leave empty to keep it",
+    "rustdesk_https_required": "The URL must start with https://",
+    "rustdesk_api_server_required": "Required to read the device list",
+    "show": "Show",
+    "hide": "Hide"
   },
   "about": {
     "title": "About"
